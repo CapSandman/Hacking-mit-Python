@@ -1,0 +1,17 @@
+{% extends '_base.html' %}
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-3">Upload CSV Readings</h1>
+<form method="post" action="/uploads/csv" enctype="multipart/form-data" class="bg-white p-4 rounded shadow grid gap-3 max-w-xl">
+    <label>Meter
+        <select class="border p-2 w-full" name="meter_id" required>
+            {% for m in meters %}
+                <option value="{{ m.id }}">#{{ m.id }} — {{ m.name }} (Site {{ m.site_id }})</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>CSV file <input type="file" name="file" accept=".csv" class="border p-2 w-full" required></label>
+    <p class="text-sm text-gray-600">Headers: <code>timestamp,value_kwh</code> (e.g. <code>2025-10-08 13:30,3.25</code>)</p>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded">Upload</button>
+</form>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="flex justify-between mb-3">
+  <h1 class="text-2xl font-bold">PPA Contracts</h1>
+  <a class="px-3 py-2 bg-blue-600 text-white rounded" href="{{ url_for('ppa.new_contract') }}">+ New</a>
+</div>
+<table class="w-full bg-white rounded shadow text-sm">
+  <thead><tr class="border-b">
+    <th class="p-2">Site</th><th class="p-2">Name</th><th class="p-2">Kind</th>
+    <th class="p-2">Params</th><th class="p-2">Valid</th><th class="p-2">Active</th><th class="p-2">Actions</th>
+  </tr></thead>
+  <tbody>
+  {% for t, s in rows %}
+    <tr class="border-b">
+        <td class="p-2">{{ s.name }}</td>
+        <td class="p-2">{{ t.name }}</td>
+        <td class="p-2">{{ t.kind }}</td>
+        <td class="p-2">
+            {% if t.kind=='fixed' %} {{ t.fixed_price_eur_mwh }} €/MWh
+            {% elif t.kind=='cropex_multiplier' %} {{ t.coeff }} × Pck {% if t.adder_eur_mwh %}+ {{ t.adder_eur_mwh }}{% endif %}
+            {% elif t.kind=='cropex_markup' %} Pck + {{ t.markup_eur_mwh }}
+            {% endif %}
+        </td>
+        <td class="p-2">{{ t.valid_from }} – {{ t.valid_to or '∞' }}</td>
+        <td class="p-2">{{ 'yes' if t.is_active else 'no' }}</td>
+        <td class="p-2">
+            <a class="text-blue-600 mr-2" href="{{ url_for('ppa.edit_contract', tid=t.id) }}">Edit</a>
+            <form action="{{ url_for('ppa.delete_contract', tid=t.id) }}"
+                    method="post" class="inline"
+                    onsubmit="return confirm('Obrisati ovaj PPA ugovor? Ova radnja je trajna.');">
+                <button class="text-red-600">Delete</button>
+            </form>
+        </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="mt-6 flex gap-2">
+  <a class="px-3 py-2 bg-gray-700 text-white rounded" href="{{ url_for('ppa.prices') }}">Day-Ahead Prices</a>
+  <a class="px-3 py-2 bg-gray-700 text-white rounded" href="{{ url_for('ppa.preview', site_id=rows[0][0].site_id if rows else 1) }}">Preview (last month)</a>
+  <a class="px-3 py-2 bg-gray-700 text-white rounded" href="{{ url_for('ppa.invoices_list') }}">Invoices</a>
+</div>
+{% endblock %}

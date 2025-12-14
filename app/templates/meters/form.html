@@ -1,0 +1,16 @@
+{% extends '_base.html' %}
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-3">{{ 'Edit Meter' if meter else 'New Meter' }}</h1>
+<form method="post" class="bg-white p-4 rounded shadow grid gap-3 max-w-xl">
+    <label>Site
+        <select class="border p-2 w-full" name="site_id" required>
+            {% for s in sites %}
+                <option value="{{ s.id }}" {% if meter and meter.site_id==s.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Meter name <input class="border p-2 w-full" name="name" value="{{ meter.name if meter else '' }}" required></label>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+</form>
+{% endblock %}

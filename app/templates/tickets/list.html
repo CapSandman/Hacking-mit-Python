@@ -1,0 +1,189 @@
+{% extends "_base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Search results{% if q %} for “{{ q }}”{% endif %}</h1>
+
+    <form method="get" action="{{ url_for('tickets.search_bar') }}" class="flex items-center gap-2">
+      <input name="q" value="{{ q }}" placeholder="Search title, body or username..."
+             class="border rounded px-3 py-2 w-80 focus:outline-none focus:ring" />
+      <button class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700">Search</button>
+    </form>
+    <a href="{{ url_for('tickets.new_ticket') }}"
+         class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">+ New</a>
+    </div>
+  </div>
+
+  <div class="w-full bg-white rounded shadow">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b bg-gray-50 text-gray-700">
+        <th class="p-2 text-left">#</th>
+        <th class="p-2 text-left">Priority</th>
+        <th class="p-2 text-left">Username</th>
+        <th class="p-2 text-left">Title</th>
+        <th class="p-2 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for item in items %}
+      <tr class="border-b hover:bg-gray-50">
+        <td class="p-2">{{ item.id }}</td>
+        <td class="p-2 capitalize">
+          {% if item.priority == 'high' %}
+            <span class="px-2 py-0.5 rounded bg-red-100 text-red-700">high</span>
+          {% elif item.priority == 'medium' %}
+            <span class="px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">medium</span>
+          {% elif item.priority == 'low' %}
+            <span class="px-2 py-0.5 rounded bg-green-100 text-green-700">low</span>
+          {% else %}
+            <span class="text-gray-500">—</span>
+          {% endif %}
+        </td>
+        <td class="p-2">{{ item.username or '—' }}</td>
+        <td class="p-2">{{ item.title or '—' }}</td>
+        <td class="p-2">
+            <button type="button"
+              class="more-info-btn text-sm px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition btn-more-info"
+              data-id="{{ item.id }}"
+              data-title="{{ (item.title or '')|e }}"
+              data-info="{{ (item.info or '')|e }}">
+             More Info
+            </button>
+
+            <a href="{{ url_for('tickets.edit_ticket', tid=item.id) }}" class="ml-2 text-blue-600">Edit</a>
+
+            <form action="{{ url_for('tickets.delete_ticket', tid=item.id) }}" method="post" class="inline"
+                  onsubmit="return confirm('Obrisati ticket? Ova akcija je trajna.');">
+              <button class="ml-2 text-red-600">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="p-6 text-center text-gray-500">No results found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# simple pagination controls (if provided by view) #}
+  <div class="flex justify-between items-center mt-4">
+    <div>
+      {% if prev_page %}
+        <a href="{{ url_for('tickets.search_bar', q=q, page=prev_page) }}" class="px-3 py-2 bg-gray-200 rounded">Prev</a>
+      {% endif %}
+    </div>
+    <div>
+      {% if next_page %}
+        <a href="{{ url_for('tickets.search_bar', q=q, page=next_page) }}" class="px-3 py-2 bg-gray-200 rounded">Next</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{# ---------- Modal (Tailwind, bez Bootstrapa) ---------- #}
+<div id="ticket-modal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40" data-modal-close></div>
+  <div class="relative mx-auto max-w-3xl mt-20 bg-white rounded-lg shadow-lg">
+    <div class="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-lg">
+      <h3 class="font-semibold text-lg"><span id="modalTicketTitle"></span></h3>
+      <button class="p-2 text-gray-500 hover:text-gray-700" aria-label="Close" data-modal-close>&times;</button>
+    </div>
+    <div class="p-4">
+      <pre id="modalTicketInfo" class="whitespace-pre-wrap bg-gray-50 border rounded p-3 max-h-[60vh] overflow-auto"></pre>
+      <p class="text-xs text-gray-500 mt-2">Showing up to 512 characters.</p>
+    </div>
+    <div class="flex items-center justify-end gap-2 px-4 py-3 border-t bg-gray-50 rounded-b-lg">
+      <button class="px-3 py-1.5 border rounded hover:bg-gray-100" data-modal-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById('ticket-modal');
+  const modalTitle = document.getElementById('modalTicketTitle');
+  const modalInfo  = document.getElementById('modalTicketInfo');
+
+  function openModal(title, info) {
+    modalTitle.textContent = title || '';
+    modalInfo.textContent  = (info || '').length > 512 ? (info.substring(0, 512) + '…') : (info || '');
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+  }
+  function closeModal() {
+    modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  document.querySelectorAll('.btn-more-info').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const title = btn.getAttribute('data-title') || '';
+      const info  = btn.getAttribute('data-info')  || '';
+      // SIGURNO: ne koristimo innerHTML
+      openModal(title, info);
+    });
+  });
+
+  modal.querySelectorAll('[data-modal-close]').forEach(el => {
+    el.addEventListener('click', closeModal);
+  });
+
+  // ESC to close
+  document.addEventListener('keydown', (e) => {
+    if (!modal.classList.contains('hidden') && e.key === 'Escape') closeModal();
+  });
+});
+</script>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // small JS to wire More Info buttons to modal
+  document.addEventListener('DOMContentLoaded', function () {
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalUser = document.getElementById('modalUser');
+    const modalClose = document.getElementById('modalClose');
+
+    function openModal(title, user, body) {
+      modalTitle.textContent = title;
+      modalUser.textContent = "By: " + user;
+      // body is already escaped server-side (we used data-body="{{ item.body|e }}")
+      // here we set as textContent to avoid interpreting HTML
+      modalBody.textContent = body;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+      modalTitle.textContent = '';
+      modalUser.textContent = '';
+      modalBody.textContent = '';
+    }
+
+    document.querySelectorAll('.more-info-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const title = btn.getAttribute('data-title') || '';
+        const user = btn.getAttribute('data-user') || '';
+        const body = btn.getAttribute('data-body') || '';
+        openModal(title, user, body);
+      });
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-3">{{ 'Edit' if tariff else 'New' }} PPA Contract</h1>
+<form method="post" class="bg-white p-4 rounded shadow grid md:grid-cols-2 gap-3 max-w-3xl">
+  <label>Site
+    <select name="site_id" class="border p-2 w-full">
+      {% for s in sites %}
+        <option value="{{s.id}}" {% if tariff and s.id==tariff.site_id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Name <input name="name" class="border p-2 w-full" value="{{ tariff.name if tariff else 'Default PPA' }}"></label>
+  <label>Kind
+    <select name="kind" class="border p-2 w-full">
+      {% set k = tariff.kind if tariff else 'cropex_multiplier' %}
+      <option value="fixed" {% if k=='fixed' %}selected{% endif %}>Fixed €/MWh</option>
+      <option value="cropex_multiplier" {% if k=='cropex_multiplier' %}selected{% endif %}>Coeff × Pck + Adder</option>
+      <option value="cropex_markup" {% if k=='cropex_markup' %}selected{% endif %}>Pck + Markup</option>
+    </select>
+  </label>
+
+  <label>Fixed price (€/MWh) <input name="fixed_price_eur_mwh" type="number" step="0.0001" class="border p-2 w-full" value="{{ tariff.fixed_price_eur_mwh if tariff else '' }}"></label>
+  <label>Coeff (×Pck) <input name="coeff" type="number" step="0.000001" class="border p-2 w-full" value="{{ tariff.coeff if tariff else 0.75 }}"></label>
+  <label>Adder (€/MWh) <input name="adder_eur_mwh" type="number" step="0.0001" class="border p-2 w-full" value="{{ tariff.adder_eur_mwh if tariff else 0 }}"></label>
+  <label>Markup (€/MWh) <input name="markup_eur_mwh" type="number" step="0.0001" class="border p-2 w-full" value="{{ tariff.markup_eur_mwh if tariff else 0 }}"></label>
+
+  <label>Valid from <input name="valid_from" type="date" class="border p-2 w-full" value="{{ tariff.valid_from if tariff else '' }}"></label>
+  <label>Valid to (optional) <input name="valid_to" type="date" class="border p-2 w-full" value="{{ tariff.valid_to if tariff else '' }}"></label>
+
+  <label class="flex items-center gap-2 col-span-full">
+    <input type="checkbox" name="is_active" {% if not tariff or tariff.is_active %}checked{% endif %}> Active
+  </label>
+  <button class="bg-blue-600 text-white px-4 py-2 rounded col-span-full">Save</button>
+</form>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Reports</h1>
+
+{% if site_id %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+  <div class="bg-white p-4 rounded shadow">
+    <div class="text-sm text-gray-500">Today ({{ d_to }})</div>
+    <div class="text-2xl font-semibold">{{ '%.2f' % kpis.today }} kWh</div>
+  </div>
+  <div class="bg-white p-4 rounded shadow">
+    <div class="text-sm text-gray-500">Month-To-Date ({{ d_to.replace(day=1) }} – {{ d_to }})</div>
+    <div class="text-2xl font-semibold">{{ '%.2f' % kpis.mtd }} kWh</div>
+  </div>
+  <div class="bg-white p-4 rounded shadow">
+    <div class="text-sm text-gray-500">Year-To-Date ({{ d_to.replace(month=1, day=1) }} – {{ d_to }})</div>
+    <div class="text-2xl font-semibold">{{ '%.2f' % kpis.ytd }} kWh</div>
+  </div>
+</div>
+{% endif %}
+
+<form method="get" class="bg-white p-4 rounded shadow grid md:grid-cols-4 gap-3 mb-4">
+  <label>Site
+    <select name="site_id" class="border p-2 w-full" required>
+      <option value="">-- select --</option>
+      {% for s in sites %}
+        <option value="{{s.id}}" {% if site_id==s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>From
+    <input type="date" name="from" class="border p-2 w-full" value="{{ d_from }}">
+  </label>
+  <label>To
+    <input type="date" name="to" class="border p-2 w-full" value="{{ d_to }}">
+  </label>
+  <div class="flex items-end gap-2">
+    <button class="bg-blue-600 text-white px-4 py-2 rounded">Filter</button>
+    {% if site_id %}
+      <a class="bg-gray-700 text-white px-3 py-2 rounded"
+         href="/reports/export.csv?site_id={{site_id}}&from={{d_from}}&to={{d_to}}">Export CSV</a>
+      <a class="bg-gray-700 text-white px-3 py-2 rounded"
+         href="/reports/export.xlsx?site_id={{site_id}}&from={{d_from}}&to={{d_to}}">Export Excel</a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="bg-white p-4 rounded shadow">
+  {% if rows and rows|length %}
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b">
+          <th class="p-2 text-left">Day</th>
+          <th class="p-2 text-right">Energy (kWh)</th>
+        </tr>
+      </thead>
+      {% set ns = namespace(total=0) %}
+      {% set total = rows | sum(attribute='energy_kwh') %}
+        <tbody>
+        {% for r in rows %}
+            {% set ns.total = ns.total + r.energy_kwh %}
+            <tr class="border-b">
+                <td class="p-2">{{ r.day }}</td>
+                <td class="p-2 text-right">{{ '%.2f' % r.energy_kwh }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td class="p-2 font-semibold text-right">Total (range)</td>
+                <td class="p-2 text-right font-semibold">{{ '%.2f' % total }}</td>
+            </tr>
+        </tfoot>
+    </table>
+  {% else %}
+    <p>No data for selected range.</p>
+  {% endif %}
+</div>
+{% endblock %}

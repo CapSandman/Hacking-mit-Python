@@ -1,0 +1,39 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-3">Invoice Preview</h1>
+<p class="mb-2 text-sm text-gray-700">
+  Site: <b>{{ site.name }}</b> • Period: <b>{{ period_start }}</b> – <b>{{ period_end }}</b><br>
+  Tariff: <b>{{ tariff.name }}</b> ({{ tariff.kind }})
+</p>
+<div class="bg-white rounded shadow p-4">
+  <table class="w-full text-sm">
+    <thead><tr class="border-b">
+      <th class="p-2 text-left">Hour</th>
+      <th class="p-2 text-right">Energy (MWh)</th>
+      <th class="p-2 text-right">Unit (€/MWh)</th>
+      <th class="p-2 text-right">Amount (EUR)</th>
+    </tr></thead>
+    <tbody>
+      {% for l in lines %}
+        <tr class="border-b">
+          <td class="p-2">{{ l.ts }}</td>
+          <td class="p-2 text-right">{{ '%.6f' % l.energy_mwh }}</td>
+          <td class="p-2 text-right">{{ '%.4f' % l.unit_price }}</td>
+          <td class="p-2 text-right">{{ '%.4f' % l.amount }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr><td colspan="3" class="p-2 text-right font-semibold">Total</td>
+          <td class="p-2 text-right font-semibold">{{ '%.2f' % total }}</td></tr>
+    </tfoot>
+  </table>
+</div>
+
+<form method="post" action="{{ url_for('ppa.generate_invoice') }}" class="mt-4">
+  <input type="hidden" name="site_id" value="{{ site.id }}">
+  <input type="hidden" name="period_start" value="{{ period_start }}">
+  <input type="hidden" name="period_end" value="{{ period_end }}">
+  <button class="bg-blue-600 text-white px-4 py-2 rounded">Generate Invoice</button>
+</form>
+{% endblock %}

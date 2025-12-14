@@ -1,0 +1,17 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-8 px-4 bg-white rounded shadow">
+  <h1 class="text-2xl font-bold mb-2">{{ item.title }}</h1>
+  <p class="text-sm text-gray-500 mb-4">By {{ item.username }} • {{ item.created_at }}</p>
+  <pre class="whitespace-pre-wrap text-sm">{{ item.info }}</pre>
+
+  <div class="mt-6 flex gap-2">
+    <a href="{{ url_for('tickets.list_tickets') }}" class="px-3 py-2 bg-gray-200 rounded">Back</a>
+    <a href="{{ url_for('tickets.edit_ticket', tid=item.id) }}" class="px-3 py-2 bg-blue-600 text-white rounded">Edit</a>
+    <form action="{{ url_for('tickets.delete_ticket', tid=item.id) }}" method="post" class="inline"
+          onsubmit="return confirm('Obrisati ticket? Ova akcija je trajna.');">
+      <button class="px-3 py-2 bg-red-600 text-white rounded">Delete</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="flex justify-between items-center mb-3">
+  <h1 class="text-2xl font-bold">Alarm Rules</h1>
+  <a class="px-3 py-2 bg-blue-600 text-white rounded" href="/alarms/new">+ New</a>
+</div>
+<table class="w-full bg-white rounded shadow text-sm">
+  <thead><tr class="border-b">
+    <th class="p-2 text-left">Site</th><th class="p-2">Type</th>
+    <th class="p-2">No-data (min)</th><th class="p-2">Expect (kWh/kWp)</th>
+    <th class="p-2">Email</th><th class="p-2">Active</th><th class="p-2">Actions</th>
+  </tr></thead>
+  <tbody>
+  {% for r, s in rules %}
+    <tr class="border-b">
+      <td class="p-2">{{ s.name }}</td>
+      <td class="p-2 text-center">{{ r.rule_type }}</td>
+      <td class="p-2 text-center">{{ r.minutes_no_data or '-' }}</td>
+      <td class="p-2 text-center">{{ r.expect_kwh_per_kwp or '-' }}</td>
+      <td class="p-2 text-center">{{ r.email_to or '-' }}</td>
+      <td class="p-2 text-center">{{ 'yes' if r.is_active else 'no' }}</td>
+      <td class="p-2 text-center">
+        <a class="text-blue-600" href="/alarms/{{r.id}}/edit">Edit</a>
+        <form class="inline" action="/alarms/{{r.id}}/delete" method="post" onsubmit="return confirm('Delete?')">
+          <button class="text-red-600 ml-2">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

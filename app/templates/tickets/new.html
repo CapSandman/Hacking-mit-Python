@@ -1,0 +1,39 @@
+{% extends "_base.html" %}
+{% block title %}New Ticket{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-3">{{ 'Edit' if ticket else 'New' }} Ticket</h1>
+
+<form method="post" class="bg-white p-4 rounded shadow grid md:grid-cols-2 gap-3 max-w-3xl">
+  <label class="text-sm text-gray-700">Priority
+    <select name="priority" class="border p-2 w-full rounded">
+      {% set pr = ticket.priority if ticket else '' %}
+      <option value="">Select...</option>
+      <option value="low"    {% if pr=='low' %}selected{% endif %}>Low</option>
+      <option value="medium" {% if pr=='medium' %}selected{% endif %}>Medium</option>
+      <option value="high"   {% if pr=='high' %}selected{% endif %}>High</option>
+    </select>
+  </label>
+
+  <label class="text-sm text-gray-700">Username
+    <input name="username" class="border p-2 w-full rounded"
+           value="{{ last_user or (ticket.username if ticket else '') }}">
+  </label>
+
+  <label class="text-sm text-gray-700 md:col-span-2">Title <span class="text-red-600">*</span>
+    <input name="title" class="border p-2 w-full rounded" required
+           value="{{ ticket.title if ticket else '' }}">
+  </label>
+
+  <label class="text-sm text-gray-700 md:col-span-2">Description / Info
+    <textarea name="info" class="border p-2 w-full rounded min-h-[160px]">{{ ticket.info if ticket else '' }}</textarea>
+    <div class="text-xs text-gray-500 mt-1">Modal prikazuje do 512 znakova.</div>
+  </label>
+
+  <div class="md:col-span-2 flex justify-end gap-2 pt-2">
+    <a href="{{ url_for('tickets.list_tickets') }}"
+       class="px-4 py-2 border rounded hover:bg-gray-50">Cancel</a>
+    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+  </div>
+</form>
+{% endblock %}

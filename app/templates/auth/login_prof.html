@@ -1,0 +1,24 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="max-w-sm mx-auto bg-white p-6 rounded shadow">
+  <h1 class="text-xl font-bold mb-4">Login (profesorov mod)</h1>
+
+  <form method="post">
+    <label class="block mb-2">
+      <span class="text-sm text-gray-600">Username</span>
+      <input name="username" class="w-full border p-2 rounded" autocomplete="username" required>
+    </label>
+
+    <label class="block mb-4">
+      <span class="text-sm text-gray-600">Password</span>
+      <input name="password" type="password" class="w-full border p-2 rounded" autocomplete="current-password" required>
+    </label>
+
+    <button class="w-full bg-blue-600 text-white py-2 rounded">Sign in</button>
+  </form>
+
+  <p class="mt-3 text-xs text-gray-500">
+    *Namjerno bez hash-a, bez CSRF i sa raw SQL – za vježbu loših praksi.
+  </p>
+</div>
+{% endblock %}

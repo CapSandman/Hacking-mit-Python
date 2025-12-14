@@ -1,0 +1,135 @@
+{% extends '_base.html' %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Dashboard</h1>
+
+<!-- 🟦 INPUT + SUBMIT -->
+<div class="bg-white p-4 rounded shadow">
+  <form method="GET" action="{{ url_for('main.index') }}" onsubmit="return validateInput()">
+      <label class="form-label" for="echoInput">Unesi tekst:</label>
+
+      <div class="input-group">
+          <input type="text"
+                 id="echoInput"
+                 name="input"
+                 class="form-control"
+                 value="{{ request.args.get('input', '') }}"
+                 placeholder="Upiši nešto...">
+          <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded">Submit</button>
+      </div>
+  </form>
+
+  <!-- RAW ISPI S # kod request.args.get(input) dodajemo |safe kako bi script radio kada ga ubacimo-->
+    {% if request.args.get('input') %}
+    <pre class="mt-3" style="white-space: pre-wrap;">{{ request.args.get('input') }}</pre> 
+    {% endif %}
+
+</div>
+
+<!-- 🟦 VALIDACIJA - ALERT NA GREŠKU -->
+<script>
+function validateInput() {
+    const val = document.getElementById("echoInput").value.trim();
+
+    // PRIMJER GREŠKE: PRAZAN INPUT
+    if (val === "") {
+        alert("Greška: polje ne može biti prazno.");
+        return false;  // blokira submit
+    }
+
+    // PRIMJER GREŠKE: PREVIŠE ZNAKOVA
+    if (val.length > 512) {
+        alert("Greška: predug tekst (max 100 znakova).");
+        return false;
+    }
+
+    // PRIMJER GREŠKE: zabranjeni karakteri
+    //if (/[^A-Za-z0-9 .,\-_]/.test(val)) {
+    //    alert("Greška: dozvoljena su samo slova, brojevi i . , - _");
+    //    return false;
+    //}
+
+    // Ako je input OK → dozvoli submit (URL postaje /sfm?input=...)
+    return true;
+}
+</script>
+
+
+
+
+<div class="grid md:grid-cols2 gap-6">
+    <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-semibold mb-2">Energy by Site (Today vs Yesterday)</h2>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-2">Site</th>
+                    <th class="text-right p-2">Today (kWh)</th>
+                    <th class="text-right p-2">Yesterday (kWh)</th>
+                    <th class="text-right p-2">Today (kWh/kWp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                    {% set cap = r.capacity_kwp | default(1) %}
+                    {% set today_per_kwp = ( (r.kwh_today or 0) / (cap or 1) ) %}
+                    <tr class="border-b">
+                        <td class="p-2">{{ r.site_name }}</td>
+                        <td class="p-2 text-right">{{ '%.2f' % (r.kwh_today or 0) }}</td>
+                        <td class="p-2 text-right">{{ '%.2f' % (r.kwh_yday or 1) }}</td>
+                        <td class="p-2 text-right">{{ '%.3f' % today_per_kwp }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-semibold mb-2">No-data alarms (last 60min)</h2>
+        {% if no_data %}
+            <ul class="list-disc ml-6">
+                {% for a in no_data %}
+                    <li><span class="font-medium">{{ a.site_name }}</span> . {{ a.meter_name }} - last reading: {{ a.last_ts }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No alarms</p>
+        {% endif %}
+    </div>
+</div>
+
+<hr class="my-6">
+<div class="bg-white p-4 rounded shadow">
+  <h2 class="font-semibold mb-2">Per-site chart (Today)</h2>
+  <form class="flex gap-3 items-center mb-3" onsubmit="return false;">
+    <label>Site:
+      <select id="siteSelect" class="border p-2">
+        {% for r in rows %}
+          <option value="{{ r.site_id }}">{{ r.site_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <input id="chartDate" type="date" class="border p-2">
+    <button onclick="loadChart()" class="bg-blue-600 text-white px-3 py-2 rounded">Load</button>
+  </form>
+  <canvas id="siteChart" height="120"></canvas>
+</div>
+
+<script>
+let chart;
+async function loadChart() {
+  const sel = document.getElementById('siteSelect');
+  if (!sel || !sel.value) return;  // nema site-ova → ne zovi API
+  const siteId = sel.value;
+  const d = document.getElementById('chartDate').value;
+  const url = d ? `/api/site/${siteId}/day?date=${d}` : `/api/site/${siteId}/day`;
+  const res = await fetch(url);
+  if (!res.ok) return; // ako 404/401, ne radi ništa
+  const js = await res.json();
+  const ctx = document.getElementById('siteChart');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, { type: 'line', data: { labels: js.labels, datasets: [{ label: 'kWh (sum)', data: js.data }] } });
+}
+const sel = document.getElementById('siteSelect');
+if (sel && sel.value) loadChart();
+</script>
+{% endblock %}

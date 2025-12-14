@@ -1,0 +1,22 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-3">Day-Ahead Prices (CROPEX)</h1>
+<form action="{{ url_for('ppa.upload_prices') }}" method="post" enctype="multipart/form-data" class="bg-white p-4 rounded shadow mb-4 flex items-center gap-3">
+  <input type="file" name="file" accept=".csv" class="border p-2">
+  <button class="bg-blue-600 text-white px-3 py-2 rounded">Upload CSV</button>
+  <div class="text-sm text-gray-600">CSV header: <code>ts,price_eur_mwh</code> (ts npr. 2025-10-09 13:00:00)</div>
+</form>
+<div class="bg-white rounded shadow p-4">
+  <table class="w-full text-sm">
+    <thead><tr class="border-b"><th class="p-2 text-left">Hour</th><th class="p-2 text-right">Price (€/MWh)</th></tr></thead>
+    <tbody>
+      {% for ts, price in rows %}
+        <tr class="border-b">
+          <td class="p-2">{{ ts }}</td>
+          <td class="p-2 text-right">{{ '%.2f' % price }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-3">Invoice #{{ invoice.id }}</h1>
+<p class="mb-2 text-sm text-gray-700">
+  Site: <b>{{ site.name }}</b> • Period: <b>{{ invoice.period_start }}</b> – <b>{{ invoice.period_end }}</b> •
+  Total: <b>{{ '%.2f' % invoice.total_amount }}</b> {{ invoice.currency }}
+</p>
+<a class="inline-block mb-3 bg-gray-700 text-white px-3 py-2 rounded" href="{{ url_for('ppa.export_invoice_csv', iid=invoice.id) }}">Export CSV</a>
+<div class="bg-white rounded shadow p-4">
+  <table class="w-full text-sm">
+    <thead><tr class="border-b">
+      <th class="p-2 text-left">Hour</th>
+      <th class="p-2 text-right">Energy (MWh)</th>
+      <th class="p-2 text-right">Unit (€/MWh)</th>
+      <th class="p-2 text-right">Amount (EUR)</th>
+    </tr></thead>
+    <tbody>
+    {% for it in items %}
+      <tr class="border-b">
+        <td class="p-2">{{ it.ts }}</td>
+        <td class="p-2 text-right">{{ '%.6f' % it.energy_mwh }}</td>
+        <td class="p-2 text-right">{{ '%.4f' % it.unit_price_eur_mwh }}</td>
+        <td class="p-2 text-right">{{ '%.4f' % it.line_amount_eur }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="mb-2 text-sm text-gray-700">
+  Site: <b>{{ site.name }}</b> • Period: <b>{{ invoice.period_start }}</b> – <b>{{ invoice.period_end }}</b><br>
+  Total (EUR): <b>{{ '%.2f' % invoice.total_amount }}</b> {{ invoice.currency }}<br>
+  Kurs: <b>{{ '%.5f' % rate }}</b> KM/EUR • PDV: <b>{{ '%.0f' % pdv }}%</b><br>
+  Total (KM bez PDV): <b>{{ '%.2f' % total_km_net }}</b> • PDV: <b>{{ '%.2f' % pdv_amount }}</b> •
+  <span class="font-semibold">Za platiti (KM): {{ '%.2f' % grand_total }}</span>
+</p>
+
+<a class="inline-block mb-3 bg-blue-600 text-white px-3 py-2 rounded"
+   href="{{ url_for('ppa.export_invoice_pdf', iid=invoice.id) }}">Export PDF</a>
+{% endblock %}
